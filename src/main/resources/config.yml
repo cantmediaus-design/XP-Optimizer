@@ -35,6 +35,7 @@ messages:
   stats-other: "&6[XPOptimizer] &f%player%'s total XP: &a%xp%"
   stats-player-not-found: "&c[XPOptimizer] Player not found."
   console-stats-denied: "&c[XPOptimizer] Specify a player: /xpstats <player>"
+  console-reset-denied: "&c[XPOptimizer] Specify a player: /xpstats reset <player>"
   top-header: "&6[XPOptimizer] &f--- Top %count% XP Collectors ---"
   top-entry: "&6%rank%. &f%player% &7- &a%xp%"
   reset-self: "&a[XPOptimizer] Your XP stats have been reset."

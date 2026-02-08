@@ -4,8 +4,8 @@ plugins {
 }
 
 group = "com.xpoptimizer"
-version = "3.0.0"
-description = "Zero-allocation direct XP deposit with mending support, multipliers, stats, and effects for Paper 1.21.1"
+version = "3.1.0"
+description = "Zero-allocation direct XP deposit with mending support, multipliers, stats, and effects for Paper 1.21.11"
 
 java {
     toolchain {

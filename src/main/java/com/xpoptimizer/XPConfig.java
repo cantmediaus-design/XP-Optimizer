@@ -39,6 +39,7 @@ public record XPConfig(
             Map.entry("stats-other", "&6[XPOptimizer] &f%player%'s total XP: &a%xp%"),
             Map.entry("stats-player-not-found", "&c[XPOptimizer] Player not found."),
             Map.entry("console-stats-denied", "&c[XPOptimizer] Specify a player: /xpstats <player>"),
+            Map.entry("console-reset-denied", "&c[XPOptimizer] Specify a player: /xpstats reset <player>"),
             Map.entry("top-header", "&6[XPOptimizer] &f--- Top %count% XP Collectors ---"),
             Map.entry("top-entry", "&6%rank%. &f%player% &7- &a%xp%"),
             Map.entry("reset-self", "&a[XPOptimizer] Your XP stats have been reset."),
@@ -46,6 +47,14 @@ public record XPConfig(
             Map.entry("reset-no-permission", "&c[XPOptimizer] You cannot reset other players' stats."),
             Map.entry("usage", "&6Usage: /xpstats [reload|top|reset|<player>]")
     );
+
+    /** O(1) lookup table for valid color/formatting codes after '&'. */
+    private static final boolean[] VALID_COLOR_CODES = new boolean[128];
+    static {
+        for (char c : "0123456789abcdefklmnorABCDEFKLMNOR".toCharArray()) {
+            VALID_COLOR_CODES[c] = true;
+        }
+    }
 
     public boolean isWorldAllowed(String worldName) {
         return switch (worldFilterMode) {
@@ -57,17 +66,50 @@ public record XPConfig(
 
     public String formatMessage(String key, String... replacements) {
         String msg = messages.getOrDefault(key, DEFAULT_MESSAGES.getOrDefault(key, key));
-        for (int i = 0; i + 1 < replacements.length; i += 2) {
-            msg = msg.replace(replacements[i], replacements[i + 1]);
+
+        if (replacements.length >= 2) {
+            // Build a map from the varargs pairs
+            Map<String, String> replacementMap = new HashMap<>(replacements.length / 2 + 1, 1.0f);
+            for (int i = 0; i + 1 < replacements.length; i += 2) {
+                replacementMap.put(replacements[i], replacements[i + 1]);
+            }
+
+            // Single-pass replacement: scan for %token% patterns
+            StringBuilder sb = new StringBuilder(msg.length());
+            int len = msg.length();
+            int i = 0;
+            while (i < len) {
+                char c = msg.charAt(i);
+                if (c == '%') {
+                    // Look ahead for closing %
+                    int close = msg.indexOf('%', i + 1);
+                    if (close != -1) {
+                        String token = msg.substring(i, close + 1); // includes both % delimiters
+                        String replacement = replacementMap.get(token);
+                        if (replacement != null) {
+                            sb.append(replacement);
+                            i = close + 1;
+                            continue;
+                        }
+                    }
+                }
+                sb.append(c);
+                i++;
+            }
+            msg = sb.toString();
         }
+
         return translateColors(msg);
     }
 
     private static String translateColors(String msg) {
         char[] chars = msg.toCharArray();
         for (int i = 0; i < chars.length - 1; i++) {
-            if (chars[i] == '&' && "0123456789abcdefklmnorABCDEFKLMNOR".indexOf(chars[i + 1]) != -1) {
-                chars[i] = '\u00A7';
+            if (chars[i] == '&') {
+                char next = chars[i + 1];
+                if (next < 128 && VALID_COLOR_CODES[next]) {
+                    chars[i] = '\u00A7';
+                }
             }
         }
         return new String(chars);
@@ -161,17 +203,20 @@ public record XPConfig(
         }
         Set<String> worldFilterList = Set.copyOf(config.getStringList("world-filter.worlds"));
 
-        // Messages
-        Map<String, String> messages = new HashMap<>(DEFAULT_MESSAGES);
+        // Messages -- avoid allocation when no custom messages are defined
+        Map<String, String> messages;
         if (config.isConfigurationSection("messages")) {
+            Map<String, String> merged = new HashMap<>(DEFAULT_MESSAGES);
             for (String key : config.getConfigurationSection("messages").getKeys(false)) {
                 String value = config.getString("messages." + key);
                 if (value != null) {
-                    messages.put(key, value);
+                    merged.put(key, value);
                 }
             }
+            messages = Map.copyOf(merged);
+        } else {
+            messages = DEFAULT_MESSAGES;
         }
-        messages = Map.copyOf(messages);
 
         return new XPConfig(
                 enabled, range, range * range, multiplier,

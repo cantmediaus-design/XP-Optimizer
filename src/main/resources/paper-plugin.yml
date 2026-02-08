@@ -4,25 +4,3 @@ main: com.xpoptimizer.XPOptimizerPlugin
 api-version: '1.21'
 description: Zero-allocation direct XP deposit with mending support, multipliers, stats, and effects
 author: Tom
-
-commands:
-  xpstats:
-    description: View XP stats, leaderboards, or manage plugin config
-    usage: /xpstats [reload|top|reset|<player>]
-
-permissions:
-  xpoptimizer.stats:
-    description: View your own XP stats
-    default: true
-  xpoptimizer.stats.others:
-    description: View other players' XP stats
-    default: op
-  xpoptimizer.reload:
-    description: Reload the XPOptimizer config
-    default: op
-  xpoptimizer.reset:
-    description: Reset your own XP stats
-    default: true
-  xpoptimizer.reset.others:
-    description: Reset other players' XP stats
-    default: op

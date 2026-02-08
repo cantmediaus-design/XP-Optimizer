@@ -81,6 +81,12 @@ public class XPOrbSpawnListener implements Listener {
         }
     }
 
+    public void cleanupEffectTimes() {
+        if (lastEffectTime.isEmpty()) return;
+        long cutoff = System.currentTimeMillis() - 60_000; // 1 minute
+        lastEffectTime.entrySet().removeIf(e -> e.getValue() < cutoff);
+    }
+
     private boolean canPlayEffects(UUID playerId, long cooldownMs) {
         if (cooldownMs <= 0) return true;
         long now = System.currentTimeMillis();
