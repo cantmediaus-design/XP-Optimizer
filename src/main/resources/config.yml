@@ -1,0 +1,43 @@
+enabled: true
+range: 16.0
+xp-multiplier: 1.0
+
+sound:
+  enabled: false
+  type: entity.experience_orb.pickup
+  volume: 0.5
+  pitch: 1.0
+
+particles:
+  enabled: false
+  type: HAPPY_VILLAGER
+  count: 5
+
+stats:
+  enabled: true
+  auto-save-interval: 300  # seconds between auto-saves (minimum 10, -1 to disable)
+
+effect-cooldown-ms: 200  # per-player cooldown for sound/particles in ms (0 = no cooldown)
+
+debug: false
+
+world-filter:
+  mode: DISABLED  # DISABLED, WHITELIST, or BLACKLIST
+  worlds:
+    - world
+    - world_nether
+    - world_the_end
+
+messages:
+  reload-success: "&a[XPOptimizer] Config reloaded."
+  no-permission: "&c[XPOptimizer] You do not have permission."
+  stats-self: "&6[XPOptimizer] &fTotal XP collected: &a%xp%"
+  stats-other: "&6[XPOptimizer] &f%player%'s total XP: &a%xp%"
+  stats-player-not-found: "&c[XPOptimizer] Player not found."
+  console-stats-denied: "&c[XPOptimizer] Specify a player: /xpstats <player>"
+  top-header: "&6[XPOptimizer] &f--- Top %count% XP Collectors ---"
+  top-entry: "&6%rank%. &f%player% &7- &a%xp%"
+  reset-self: "&a[XPOptimizer] Your XP stats have been reset."
+  reset-other: "&a[XPOptimizer] Reset XP stats for %player%."
+  reset-no-permission: "&c[XPOptimizer] You cannot reset other players' stats."
+  usage: "&6Usage: /xpstats [reload|top|reset|<player>]"
