@@ -15,11 +15,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public final class XPOptimizerPlugin extends JavaPlugin {
 
+    public record BoostData(double multiplier, long expiresAtTick) {}
+
     private volatile XPConfig config;
     private final Map<UUID, Long> xpStats = new ConcurrentHashMap<>();
+    private final Map<UUID, BoostData> playerBoosts = new ConcurrentHashMap<>();
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
     private static final Type STATS_TYPE = new TypeToken<Map<String, Long>>() {}.getType();
     private BukkitTask autoSaveTask;
+    private BukkitTask boostCleanupTask;
     private XPOrbSpawnListener listener;
 
     public XPConfig getXPConfig() {
@@ -41,6 +45,12 @@ public final class XPOptimizerPlugin extends JavaPlugin {
         }
 
         registerCommands();
+
+        // Cleanup expired boosts every second
+        boostCleanupTask = getServer().getScheduler().runTaskTimer(this, () -> {
+            long currentTick = getServer().getCurrentTick();
+            playerBoosts.entrySet().removeIf(e -> e.getValue().expiresAtTick() <= currentTick);
+        }, 20L, 20L);
     }
 
     @Override
@@ -48,6 +58,10 @@ public final class XPOptimizerPlugin extends JavaPlugin {
         if (autoSaveTask != null) {
             autoSaveTask.cancel();
             autoSaveTask = null;
+        }
+        if (boostCleanupTask != null) {
+            boostCleanupTask.cancel();
+            boostCleanupTask = null;
         }
         if (config.statsEnabled()) saveStats();
     }
@@ -72,6 +86,27 @@ public final class XPOptimizerPlugin extends JavaPlugin {
 
     public Set<Map.Entry<UUID, Long>> getXpStatsEntries() {
         return xpStats.entrySet();
+    }
+
+    // --- Per-Player Boost API ---
+
+    public void setPlayerBoost(UUID playerId, double multiplier, long durationTicks) {
+        long expiresAt = getServer().getCurrentTick() + durationTicks;
+        playerBoosts.put(playerId, new BoostData(multiplier, expiresAt));
+    }
+
+    public double getPlayerBoost(UUID playerId) {
+        BoostData boost = playerBoosts.get(playerId);
+        if (boost == null) return 1.0;
+        if (boost.expiresAtTick() <= getServer().getCurrentTick()) {
+            playerBoosts.remove(playerId);
+            return 1.0;
+        }
+        return boost.multiplier();
+    }
+
+    public void clearPlayerBoost(UUID playerId) {
+        playerBoosts.remove(playerId);
     }
 
     @SuppressWarnings("UnstableApiUsage")

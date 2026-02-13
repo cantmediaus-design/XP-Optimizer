@@ -56,7 +56,8 @@ public class XPOrbSpawnListener implements Listener {
         if (closest == null) return;
 
         int rawXp = orb.getExperience();
-        int xp = cfg.multiplier() != 1.0 ? (int) Math.round(rawXp * cfg.multiplier()) : rawXp;
+        double totalMultiplier = cfg.multiplier() * plugin.getPlayerBoost(closest.getUniqueId());
+        int xp = totalMultiplier != 1.0 ? (int) Math.round(rawXp * totalMultiplier) : rawXp;
         if (xp <= 0) return;
 
         event.setCancelled(true);
